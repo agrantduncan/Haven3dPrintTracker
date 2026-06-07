@@ -5,7 +5,7 @@ import { useInventory } from '../hooks/useInventory';
 import { usePinned } from '../hooks/usePinned';
 import { usePaintStatus } from '../hooks/usePaintStatus';
 import { getScenarioStatus, getTerrainStatus } from '../utils/status';
-import { MONSTER_MAX_NEEDED, MONSTER_NAMES_SORTED } from '../utils/monsterUtils';
+import { MONSTER_MAX_NEEDED, MONSTER_NAMES_SORTED, getScenarioMonsterCounts } from '../utils/monsterUtils';
 import { ScenarioLookupCard } from '../components/ScenarioLookupCard';
 import { PaintStatusDot } from '../components/PaintStatusDot';
 import type { TerrainCounts, ReadyStatus } from '../types';
@@ -67,17 +67,32 @@ export default function Dashboard() {
     return getTerrainStatus(t, inventory.terrain);
   }
 
-  function pinnedTerrainSummary(id: string): string {
+  function pinnedMissingTerrain(id: string) {
     const t = terrain.scenarios[terrainIdFor(id)];
-    if (!t) return '';
+    if (!t) return [];
     return TERRAIN_TYPES_ARR
       .filter(k => (t[k] ?? 0) > 0)
-      .map(k => {
-        const ok = inventory.terrain[k] >= (t[k] ?? 0);
-        return `${k.charAt(0).toUpperCase() + k.slice(1)}: ${t[k]} ${ok ? '✓' : '✗'}`;
-      })
-      .join('  ') || 'None required';
+      .map(k => ({
+        key: k,
+        label: k.charAt(0).toUpperCase() + k.slice(1),
+        have: inventory.terrain[k],
+        need: t[k] ?? 0,
+        ok: inventory.terrain[k] >= (t[k] ?? 0),
+      }));
   }
+
+  function pinnedMissingMonsters(id: string) {
+    const counts = getScenarioMonsterCounts(id);
+    if (!counts) return counts; // null = N/A, undefined = unknown
+    return Object.entries(counts)
+      .map(([name, need]) => ({ name, need, have: inventory.monsters[name] ?? 0 }))
+      .filter(m => m.have < m.need);
+  }
+
+  const pinnedSubhead: React.CSSProperties = {
+    fontSize: '10px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+    color: 'var(--text-dim)', margin: '0 0 4px',
+  };
 
   return (
     <div>
@@ -214,15 +229,18 @@ export default function Dashboard() {
           <div className="pinned-grid">
             {pinned.map(id => {
               const status = pinnedStatus(id);
-              const terrainSummary = pinnedTerrainSummary(id);
+              const terrainItems = pinnedMissingTerrain(id);
+              const missingMonsters = pinnedMissingMonsters(id);
+
               return (
                 <div
                   key={id}
-                  style={{ position: 'relative', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '12px 40px 12px 14px', cursor: 'pointer', transition: 'border-color 150ms, box-shadow 150ms' }}
+                  style={{ position: 'relative', background: 'var(--bg-surface)', border: `1px solid ${STATUS_COLORS[status]}44`, borderRadius: '4px', padding: '12px 40px 12px 14px', cursor: 'pointer', transition: 'border-color 150ms, box-shadow 150ms' }}
                   onClick={() => navigate('/scenarios', { state: { search: id } })}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px var(--accent-dim)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = `${STATUS_COLORS[status]}44`; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
                 >
+                  {/* Unpin button */}
                   <button
                     onClick={e => { e.stopPropagation(); unpin(id); }}
                     title="Unpin"
@@ -230,14 +248,59 @@ export default function Dashboard() {
                   >
                     <X size={14} />
                   </button>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <span className="font-fantasy" style={{ fontSize: '13px', fontWeight: 600 }}>Scenario {id}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: STATUS_COLORS[status] }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: STATUS_COLORS[status], display: 'inline-block' }} />
                       {STATUS_LABELS[status]}
                     </span>
                   </div>
-                  <p style={{ fontSize: '11px', color: 'var(--text-dim)', margin: 0, lineHeight: 1.5 }}>{terrainSummary}</p>
+
+                  {/* Terrain */}
+                  <div style={{ marginBottom: '8px' }}>
+                    <p style={pinnedSubhead}>Terrain</p>
+                    {terrainItems.length === 0 ? (
+                      <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>None required</span>
+                    ) : (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {terrainItems.map(({ key, label, have, need, ok }) => (
+                          <span key={key} style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '3px', background: 'var(--bg-surface-2)', color: ok ? 'var(--ready)' : have > 0 ? 'var(--partial)' : 'var(--missing)' }}>
+                            {label}: {have}/{need}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Monsters */}
+                  <div style={{ marginBottom: '8px' }}>
+                    <p style={pinnedSubhead}>Missing Monsters</p>
+                    {missingMonsters === undefined ? (
+                      <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>Unknown</span>
+                    ) : missingMonsters === null || missingMonsters.length === 0 ? (
+                      <span style={{ fontSize: '11px', color: 'var(--ready)' }}>✓ All covered</span>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        {missingMonsters.slice(0, 5).map(m => (
+                          <div key={m.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                            <span style={{ color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px' }}>{m.name}</span>
+                            <span style={{ color: 'var(--missing)', flexShrink: 0 }}>{m.have}/{m.need}</span>
+                          </div>
+                        ))}
+                        {missingMonsters.length > 5 && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>+{missingMonsters.length - 5} more</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Obstacles */}
+                  <div>
+                    <p style={pinnedSubhead}>Obstacles</p>
+                    <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>No data</span>
+                  </div>
                 </div>
               );
             })}
