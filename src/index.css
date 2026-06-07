@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: #0d1b2a;
+  --bg-surface: #1a2a3a;
+  --bg-surface-2: #243447;
+  --accent: #7ec8e3;
+  --accent-dim: rgba(126,200,227,0.15);
+  --text-primary: #c8d8e8;
+  --text-dim: #7a9ab0;
+  --ready: #00ff88;
+  --partial: #ffaa00;
+  --missing: #ff4444;
+  --border: rgba(126,200,227,0.2);
+  --border-hover: rgba(126,200,227,0.5);
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: system-ui, sans-serif;
+}
+
+h1, h2, h3, .font-fantasy {
+  font-family: 'Cinzel', serif;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+}

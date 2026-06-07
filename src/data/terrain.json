@@ -1,0 +1,1108 @@
+{
+  "maxNeeded": {
+    "lava": 35,
+    "metal": 132,
+    "rock": 128,
+    "snow": 140,
+    "stone": 118,
+    "wood": 87
+  },
+  "scenarios": {
+    "0": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 117,
+      "stone": 0,
+      "wood": 0
+    },
+    "1": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 89,
+      "stone": 0,
+      "wood": 0
+    },
+    "2": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 92,
+      "stone": 0,
+      "wood": 0
+    },
+    "3": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 33,
+      "snow": 64,
+      "stone": 0,
+      "wood": 0
+    },
+    "4": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 81,
+      "snow": 35,
+      "stone": 0,
+      "wood": 0
+    },
+    "5": {
+      "lava": 0,
+      "metal": 9,
+      "rock": 0,
+      "snow": 23,
+      "stone": 32,
+      "wood": 0
+    },
+    "6": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 83,
+      "stone": 0,
+      "wood": 0
+    },
+    "7": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 47,
+      "snow": 37,
+      "stone": 0,
+      "wood": 0
+    },
+    "8": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 65,
+      "stone": 0,
+      "wood": 0
+    },
+    "9": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 83,
+      "snow": 0,
+      "stone": 53,
+      "wood": 0
+    },
+    "10": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 85,
+      "stone": 0,
+      "wood": 0
+    },
+    "11": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 63,
+      "stone": 0,
+      "wood": 0
+    },
+    "12": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 116,
+      "wood": 0
+    },
+    "13": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 119,
+      "stone": 0,
+      "wood": 0
+    },
+    "14": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 85,
+      "stone": 0,
+      "wood": 0
+    },
+    "15": {
+      "lava": 0,
+      "metal": 81,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "16": {
+      "lava": 0,
+      "metal": 53,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "17": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 14,
+      "snow": 0,
+      "stone": 90,
+      "wood": 0
+    },
+    "18": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 91,
+      "stone": 0,
+      "wood": 0
+    },
+    "19": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 53,
+      "snow": 23,
+      "stone": 0,
+      "wood": 0
+    },
+    "20": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 14,
+      "snow": 0,
+      "stone": 77,
+      "wood": 0
+    },
+    "21": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 36,
+      "stone": 90,
+      "wood": 0
+    },
+    "22": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 73
+    },
+    "23": {
+      "lava": 0,
+      "metal": 94,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "24": {
+      "lava": 0,
+      "metal": 78,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "25": {
+      "lava": 0,
+      "metal": 82,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "26": {
+      "lava": 0,
+      "metal": 85,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "27": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 14,
+      "snow": 0,
+      "stone": 98,
+      "wood": 0
+    },
+    "28": {
+      "lava": 35,
+      "metal": 0,
+      "rock": 70,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "29": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 140,
+      "stone": 0,
+      "wood": 0
+    },
+    "30": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 140,
+      "stone": 0,
+      "wood": 0
+    },
+    "31": {
+      "lava": 0,
+      "metal": 74,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "32": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 89,
+      "stone": 0,
+      "wood": 0
+    },
+    "33": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 53,
+      "snow": 28,
+      "stone": 0,
+      "wood": 0
+    },
+    "34": {
+      "lava": 0,
+      "metal": 33,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "35": {
+      "lava": 35,
+      "metal": 0,
+      "rock": 53,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "36": {
+      "lava": 0,
+      "metal": 53,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "37": {
+      "lava": 0,
+      "metal": 46,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "38": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 28,
+      "snow": 100,
+      "stone": 0,
+      "wood": 0
+    },
+    "39": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 14,
+      "snow": 85,
+      "stone": 42,
+      "wood": 0
+    },
+    "40": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 85,
+      "stone": 0,
+      "wood": 0
+    },
+    "41": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 58,
+      "wood": 0
+    },
+    "42": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 75,
+      "snow": 0,
+      "stone": 31,
+      "wood": 0
+    },
+    "43": {
+      "lava": 0,
+      "metal": 112,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "44": {
+      "lava": 0,
+      "metal": 96,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "45": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 76,
+      "stone": 0,
+      "wood": 36
+    },
+    "46": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 76,
+      "stone": 0,
+      "wood": 0
+    },
+    "47": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 19,
+      "snow": 76,
+      "stone": 0,
+      "wood": 0
+    },
+    "48": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 75,
+      "stone": 0,
+      "wood": 0
+    },
+    "49": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 100,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "50": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 53,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "51": {
+      "lava": 0,
+      "metal": 103,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "52": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 118,
+      "stone": 0,
+      "wood": 0
+    },
+    "53": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 53,
+      "snow": 23,
+      "stone": 0,
+      "wood": 0
+    },
+    "54": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 79,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "55": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 53,
+      "snow": 35,
+      "stone": 0,
+      "wood": 0
+    },
+    "56": {
+      "lava": 35,
+      "metal": 0,
+      "rock": 62,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "57": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 76,
+      "stone": 0,
+      "wood": 0
+    },
+    "58": {
+      "lava": 0,
+      "metal": 81,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "59": {
+      "lava": 0,
+      "metal": 87,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "60": {
+      "lava": 35,
+      "metal": 0,
+      "rock": 64,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "61": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 71,
+      "snow": 36,
+      "stone": 0,
+      "wood": 0
+    },
+    "62": {
+      "lava": 0,
+      "metal": 62,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "63": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 69,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "64": {
+      "lava": 0,
+      "metal": 106,
+      "rock": 0,
+      "snow": 35,
+      "stone": 83,
+      "wood": 0
+    },
+    "65": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 116,
+      "stone": 0,
+      "wood": 0
+    },
+    "66": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 59,
+      "snow": 109,
+      "stone": 31,
+      "wood": 0
+    },
+    "67": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 91,
+      "stone": 0,
+      "wood": 0
+    },
+    "68": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 63,
+      "stone": 0,
+      "wood": 0
+    },
+    "69": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 24,
+      "snow": 63,
+      "stone": 0,
+      "wood": 0
+    },
+    "70": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 104,
+      "stone": 0,
+      "wood": 0
+    },
+    "71": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 37,
+      "wood": 75
+    },
+    "72": {
+      "lava": 0,
+      "metal": 49,
+      "rock": 46,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "73": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 117,
+      "snow": 0,
+      "stone": 0,
+      "wood": 14
+    },
+    "74": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 80,
+      "stone": 19,
+      "wood": 0
+    },
+    "75": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 79,
+      "snow": 32,
+      "stone": 0,
+      "wood": 0
+    },
+    "76": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 19,
+      "snow": 9,
+      "stone": 63,
+      "wood": 0
+    },
+    "77": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 19,
+      "snow": 0,
+      "stone": 53,
+      "wood": 0
+    },
+    "78": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 111,
+      "snow": 0,
+      "stone": 28,
+      "wood": 0
+    },
+    "79": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 114,
+      "snow": 9,
+      "stone": 0,
+      "wood": 0
+    },
+    "80": {
+      "lava": 0,
+      "metal": 85,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "81": {
+      "lava": 0,
+      "metal": 127,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "82": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 28,
+      "snow": 50,
+      "stone": 0,
+      "wood": 0
+    },
+    "83": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 64,
+      "snow": 0,
+      "stone": 32,
+      "wood": 0
+    },
+    "84": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 36,
+      "stone": 0,
+      "wood": 0
+    },
+    "85": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 92,
+      "snow": 55,
+      "stone": 0,
+      "wood": 0
+    },
+    "86": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 120,
+      "stone": 0,
+      "wood": 0
+    },
+    "87": {
+      "lava": 0,
+      "metal": 119,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "88": {
+      "lava": 0,
+      "metal": 61,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "89": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 22,
+      "snow": 97,
+      "stone": 0,
+      "wood": 0
+    },
+    "90": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 24,
+      "snow": 73,
+      "stone": 0,
+      "wood": 0
+    },
+    "91": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 46,
+      "stone": 0,
+      "wood": 23
+    },
+    "92": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 87
+    },
+    "93": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 64,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "94": {
+      "lava": 0,
+      "metal": 103,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "95": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 79,
+      "stone": 0,
+      "wood": 0
+    },
+    "96": {
+      "lava": 0,
+      "metal": 37,
+      "rock": 105,
+      "snow": 9,
+      "stone": 0,
+      "wood": 0
+    },
+    "97": {
+      "lava": 0,
+      "metal": 82,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "98": {
+      "lava": 0,
+      "metal": 51,
+      "rock": 28,
+      "snow": 23,
+      "stone": 0,
+      "wood": 0
+    },
+    "99": {
+      "lava": 0,
+      "metal": 9,
+      "rock": 22,
+      "snow": 50,
+      "stone": 9,
+      "wood": 0
+    },
+    "100": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 81,
+      "stone": 0,
+      "wood": 0
+    },
+    "101": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 22,
+      "snow": 0,
+      "stone": 99,
+      "wood": 0
+    },
+    "103": {
+      "lava": 0,
+      "metal": 34,
+      "rock": 0,
+      "snow": 0,
+      "stone": 34,
+      "wood": 0
+    },
+    "104": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 101,
+      "wood": 0
+    },
+    "105": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 14,
+      "snow": 0,
+      "stone": 90,
+      "wood": 0
+    },
+    "106": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 14,
+      "snow": 0,
+      "stone": 93,
+      "wood": 0
+    },
+    "107": {
+      "lava": 0,
+      "metal": 41,
+      "rock": 0,
+      "snow": 0,
+      "stone": 113,
+      "wood": 0
+    },
+    "108": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 128,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "109": {
+      "lava": 0,
+      "metal": 74,
+      "rock": 0,
+      "snow": 0,
+      "stone": 50,
+      "wood": 0
+    },
+    "110": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 9,
+      "stone": 53,
+      "wood": 0
+    },
+    "111": {
+      "lava": 35,
+      "metal": 0,
+      "rock": 109,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "112": {
+      "lava": 35,
+      "metal": 0,
+      "rock": 0,
+      "snow": 59,
+      "stone": 0,
+      "wood": 0
+    },
+    "113": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 111,
+      "stone": 0,
+      "wood": 0
+    },
+    "114": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 64,
+      "stone": 0,
+      "wood": 0
+    },
+    "115": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 74,
+      "stone": 0,
+      "wood": 0
+    },
+    "116": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 85,
+      "stone": 0,
+      "wood": 0
+    },
+    "117": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 91,
+      "stone": 0,
+      "wood": 0
+    },
+    "118": {
+      "lava": 35,
+      "metal": 0,
+      "rock": 31,
+      "snow": 19,
+      "stone": 0,
+      "wood": 0
+    },
+    "119": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 132,
+      "stone": 0,
+      "wood": 0
+    },
+    "120": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 84,
+      "wood": 0
+    },
+    "121": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 118,
+      "wood": 0
+    },
+    "122": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 59,
+      "snow": 32,
+      "stone": 49,
+      "wood": 0
+    },
+    "123": {
+      "lava": 0,
+      "metal": 132,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "124": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 76,
+      "stone": 0,
+      "wood": 0
+    },
+    "125": {
+      "lava": 0,
+      "metal": 98,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 0
+    },
+    "126": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 76,
+      "stone": 0,
+      "wood": 0
+    },
+    "127": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 0,
+      "wood": 87
+    },
+    "128": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 67,
+      "stone": 14,
+      "wood": 0
+    },
+    "129": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 105,
+      "stone": 0,
+      "wood": 0
+    },
+    "130": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 14,
+      "snow": 71,
+      "stone": 0,
+      "wood": 0
+    },
+    "131": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 35,
+      "stone": 0,
+      "wood": 0
+    },
+    "132": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 104,
+      "wood": 0
+    },
+    "133": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 0,
+      "snow": 0,
+      "stone": 104,
+      "wood": 0
+    },
+    "134": {
+      "lava": 0,
+      "metal": 80,
+      "rock": 0,
+      "snow": 18,
+      "stone": 0,
+      "wood": 0
+    },
+    "135": {
+      "lava": 0,
+      "metal": 51,
+      "rock": 50,
+      "snow": 0,
+      "stone": 23,
+      "wood": 0
+    },
+    "136": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 81,
+      "snow": 0,
+      "stone": 28,
+      "wood": 0
+    },
+    "137": {
+      "lava": 0,
+      "metal": 0,
+      "rock": 78,
+      "snow": 0,
+      "stone": 0,
+      "wood": 36
+    }
+  }
+}

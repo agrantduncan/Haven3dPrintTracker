@@ -1,0 +1,20 @@
+{
+  "note": "Obstacle data to be filled in manually",
+  "types": [
+    "Rock Column",
+    "Stalagmites",
+    "Nest",
+    "Altar",
+    "Rubble",
+    "Barricade",
+    "Bookcase",
+    "Crate",
+    "Pillar",
+    "Sarcophagus",
+    "Stone Pillar",
+    "Table",
+    "Tree",
+    "Wall Section"
+  ],
+  "scenarios": {}
+}
