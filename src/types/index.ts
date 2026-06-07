@@ -24,3 +24,5 @@ export interface Inventory {
 }
 
 export type ReadyStatus = 'ready' | 'partial' | 'missing' | 'no-data';
+
+export type PaintStatus = 'unpainted' | 'painted' | 'color-printed';
