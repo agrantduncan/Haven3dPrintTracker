@@ -1,4 +1,5 @@
-import monstersData from '../data/monsters.json'
+import monstersData from '../data/monsters.json';
+import terrainData from '../data/terrain.json';
 
 interface MonsterEntry {
   normal: number[];
@@ -7,18 +8,16 @@ interface MonsterEntry {
 interface MonstersJson {
   [scenarioId: string]: Record<string, MonsterEntry>;
 }
+interface TerrainJson {
+  maxNeeded: Record<string, number>;
+  scenarios: Record<string, unknown>;
+}
 
 const monsters = monstersData as MonstersJson;
+const terrain = terrainData as TerrainJson;
 
-// Scenarios confirmed to have no monsters (empty list, not unknown)
 const SCENARIOS_WITH_NO_MONSTERS = new Set(['91']);
 
-/**
- * Returns monster data for a scenario id.
- * - Returns an empty object for scenarios confirmed to have no monsters (e.g. 91)
- * - Returns undefined for scenarios not in monsters.json (unknown, e.g. 93)
- * - Returns null for scenario 102 (does not exist in the game)
- */
 export function getScenarioMonsters(
   scenarioId: string,
 ): Record<string, MonsterEntry> | null | undefined {
@@ -27,9 +26,6 @@ export function getScenarioMonsters(
   return monsters[scenarioId];
 }
 
-/**
- * Returns the 4A and 4B sub-entries for scenario 4.
- */
 export function getScenario4Entries(): {
   '4A': Record<string, MonsterEntry>;
   '4B': Record<string, MonsterEntry>;
@@ -39,3 +35,13 @@ export function getScenario4Entries(): {
     '4B': monsters['4B'] ?? {},
   };
 }
+
+// All scenario IDs used throughout the app (no 102, splits 4 → 4A + 4B).
+export const ALL_SCENARIO_IDS: string[] = (() => {
+  const ids: string[] = [];
+  for (const id of Object.keys(terrain.scenarios).filter(k => k !== '102')) {
+    if (id === '4') { ids.push('4A', '4B'); }
+    else ids.push(id);
+  }
+  return ids;
+})();

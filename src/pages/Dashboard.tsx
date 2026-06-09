@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useInventory } from '../hooks/useInventory';
-import { usePinned } from '../hooks/usePinned';
 import { usePaintStatus } from '../hooks/usePaintStatus';
-import { getScenarioStatus, getTerrainStatus } from '../utils/status';
+import { getScenarioStatus } from '../utils/status';
 import { MONSTER_MAX_NEEDED, MONSTER_NAMES_SORTED, getScenarioMonsterCounts } from '../utils/monsterUtils';
+import { ALL_SCENARIO_IDS } from '../utils/scenarioHelpers';
 import { ScenarioLookupCard } from '../components/ScenarioLookupCard';
 import { PaintStatusDot } from '../components/PaintStatusDot';
 import type { TerrainCounts, ReadyStatus } from '../types';
@@ -28,7 +28,6 @@ interface TerrainData {
   maxNeeded: TerrainCounts;
   scenarios: Record<string, Partial<TerrainCounts>>;
 }
-
 const terrain = terrainData as TerrainData;
 
 const STATUS_COLORS: Record<ReadyStatus, string> = {
@@ -39,44 +38,42 @@ const STATUS_LABELS: Record<ReadyStatus, string> = {
 };
 
 export default function Dashboard() {
-  const { inventory } = useInventory();
-  const { pinned, pin, unpin, isPinned } = usePinned();
+  const { inventory, pin, unpin, isPinned } = useInventory();
   const { paintStatus, getStatus } = usePaintStatus();
   const [monstersOpen, setMonstersOpen] = useState(false);
   const [lookup, setLookup] = useState('');
   const navigate = useNavigate();
 
   const readyCount = useMemo(() => {
-    return Object.entries(terrain.scenarios)
-      .filter(([id]) => id !== '102')
-      .filter(([, t]) => getScenarioStatus(t, inventory.terrain) === 'ready')
-      .length;
-  }, [inventory.terrain]);
+    return ALL_SCENARIO_IDS.filter(id => {
+      const terrainId = id === '4A' || id === '4B' ? '4' : id;
+      const t = terrain.scenarios[terrainId];
+      const monsterCounts = getScenarioMonsterCounts(id);
+      return getScenarioStatus(t, inventory.terrain, monsterCounts ?? undefined, inventory.monsters) === 'ready';
+    }).length;
+  }, [inventory.terrain, inventory.monsters]);
 
-  const totalScenarios = Object.keys(terrain.scenarios).filter(id => id !== '102').length;
+  const totalScenarios = ALL_SCENARIO_IDS.length;
 
-  // Resolve terrain id for a pinned scenario display id (4A/4B → 4)
   function terrainIdFor(id: string) {
-    if (id === '4A' || id === '4B') return '4';
-    return id;
+    return (id === '4A' || id === '4B') ? '4' : id;
   }
 
   function pinnedStatus(id: string): ReadyStatus {
     const t = terrain.scenarios[terrainIdFor(id)];
     if (!t) return 'no-data';
-    return getTerrainStatus(t, inventory.terrain);
+    const monsterCounts = getScenarioMonsterCounts(id);
+    return getScenarioStatus(t, inventory.terrain, monsterCounts ?? undefined, inventory.monsters);
   }
 
-  function pinnedMissingTerrain(id: string) {
+  function pinnedTerrainItems(id: string) {
     const t = terrain.scenarios[terrainIdFor(id)];
     if (!t) return [];
     return TERRAIN_TYPES_ARR
       .filter(k => (t[k] ?? 0) > 0)
       .map(k => ({
-        key: k,
-        label: k.charAt(0).toUpperCase() + k.slice(1),
-        have: inventory.terrain[k],
-        need: t[k] ?? 0,
+        key: k, label: k.charAt(0).toUpperCase() + k.slice(1),
+        have: inventory.terrain[k], need: t[k] ?? 0,
         ok: inventory.terrain[k] >= (t[k] ?? 0),
       }));
   }
@@ -84,9 +81,7 @@ export default function Dashboard() {
   function pinnedMissingMonsters(id: string) {
     const counts = getScenarioMonsterCounts(id);
     if (!counts) return counts; // null = N/A, undefined = unknown
-    return Object.entries(counts)
-      .map(([name, need]) => ({ name, need, have: inventory.monsters[name] ?? 0 }))
-      .filter(m => m.have < m.need);
+    return Object.keys(counts).filter(name => inventory.monsters[name] !== true);
   }
 
   const pinnedSubhead: React.CSSProperties = {
@@ -109,15 +104,9 @@ export default function Dashboard() {
           value={lookup}
           onChange={e => setLookup(e.target.value)}
           style={{
-            width: '100%',
-            padding: '12px 16px',
-            background: 'var(--bg-surface-2)',
-            border: '1px solid var(--border)',
-            borderRadius: '6px',
-            color: 'var(--text-primary)',
-            fontSize: '16px',
-            outline: 'none',
-            marginBottom: lookup.trim() ? '12px' : 0,
+            width: '100%', padding: '12px 16px', background: 'var(--bg-surface-2)',
+            border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-primary)',
+            fontSize: '16px', outline: 'none', marginBottom: lookup.trim() ? '12px' : 0,
           }}
           onFocus={e => { e.target.style.borderColor = 'var(--accent)'; }}
           onBlur={e => { e.target.style.borderColor = 'var(--border)'; }}
@@ -149,11 +138,8 @@ export default function Dashboard() {
           const need = terrain.maxNeeded[key];
           const pct = need > 0 ? Math.min(100, Math.round((have / need) * 100)) : 100;
           const barColor = have >= need ? 'var(--ready)' : have > 0 ? 'var(--partial)' : 'var(--missing)';
-
           return (
-            <div
-              key={key}
-              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '16px', transition: 'border-color 150ms, box-shadow 150ms' }}
+            <div key={key} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '16px', transition: 'border-color 150ms, box-shadow 150ms' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px var(--accent-dim)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
             >
@@ -181,7 +167,7 @@ export default function Dashboard() {
         <span style={{ color: 'var(--ready)', fontWeight: 700, fontSize: '16px' }}>{readyCount}</span>
         {' '}of{' '}
         <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{totalScenarios}</span>
-        {' '}scenarios
+        {' '}scenarios (terrain + monsters)
       </div>
 
       {/* Collapsible Monsters */}
@@ -198,9 +184,8 @@ export default function Dashboard() {
         <div style={{ maxHeight: monstersOpen ? '400px' : '0', overflow: 'hidden', transition: 'max-height 200ms ease-in-out' }}>
           <div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid var(--border)' }}>
             {MONSTER_NAMES_SORTED.map((name, i) => {
-              const need = MONSTER_MAX_NEEDED[name] ?? 0;
-              const have = inventory.monsters[name] ?? 0;
-              const color = have >= need ? 'var(--ready)' : have > 0 ? 'var(--partial)' : 'var(--missing)';
+              const checked = inventory.monsters[name] === true;
+              const standees = MONSTER_MAX_NEEDED[name] ?? 0;
               const ps = getStatus(name);
               return (
                 <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)', borderBottom: i < MONSTER_NAMES_SORTED.length - 1 ? '1px solid var(--border)' : 'none' }}>
@@ -208,7 +193,10 @@ export default function Dashboard() {
                     <PaintStatusDot status={ps} />
                     {name}
                   </span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color, fontVariantNumeric: 'tabular-nums' }}>{have} / {need}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-dim)' }}>{standees} standees</span>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: checked ? 'var(--ready)' : 'var(--missing)', flexShrink: 0 }} title={checked ? 'Have full set' : 'Missing'} />
+                  </div>
                 </div>
               );
             })}
@@ -221,15 +209,15 @@ export default function Dashboard() {
         <h3 className="font-fantasy" style={{ fontSize: '15px', fontWeight: 600, color: 'var(--accent)', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>
           Pinned Scenarios
         </h3>
-        {pinned.length === 0 ? (
+        {inventory.pinned.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic' }}>
             No pinned scenarios — search above and pin for quick access
           </p>
         ) : (
           <div className="pinned-grid">
-            {pinned.map(id => {
+            {inventory.pinned.map(id => {
               const status = pinnedStatus(id);
-              const terrainItems = pinnedMissingTerrain(id);
+              const terrainItems = pinnedTerrainItems(id);
               const missingMonsters = pinnedMissingMonsters(id);
 
               return (
@@ -240,7 +228,6 @@ export default function Dashboard() {
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px var(--accent-dim)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = `${STATUS_COLORS[status]}44`; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
                 >
-                  {/* Unpin button */}
                   <button
                     onClick={e => { e.stopPropagation(); unpin(id); }}
                     title="Unpin"
@@ -249,7 +236,6 @@ export default function Dashboard() {
                     <X size={14} />
                   </button>
 
-                  {/* Header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <span className="font-fantasy" style={{ fontSize: '13px', fontWeight: 600 }}>Scenario {id}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: STATUS_COLORS[status] }}>
@@ -258,7 +244,6 @@ export default function Dashboard() {
                     </span>
                   </div>
 
-                  {/* Terrain */}
                   <div style={{ marginBottom: '8px' }}>
                     <p style={pinnedSubhead}>Terrain</p>
                     {terrainItems.length === 0 ? (
@@ -274,7 +259,6 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* Monsters */}
                   <div style={{ marginBottom: '8px' }}>
                     <p style={pinnedSubhead}>Missing Monsters</p>
                     {missingMonsters === undefined ? (
@@ -283,11 +267,10 @@ export default function Dashboard() {
                       <span style={{ fontSize: '11px', color: 'var(--ready)' }}>✓ All covered</span>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        {missingMonsters.slice(0, 5).map(m => (
-                          <div key={m.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                            <span style={{ color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px' }}>{m.name}</span>
-                            <span style={{ color: 'var(--missing)', flexShrink: 0 }}>{m.have}/{m.need}</span>
-                          </div>
+                        {missingMonsters.slice(0, 5).map(name => (
+                          <span key={name} style={{ fontSize: '11px', color: 'var(--missing)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            ✗ {name}
+                          </span>
                         ))}
                         {missingMonsters.length > 5 && (
                           <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>+{missingMonsters.length - 5} more</span>
@@ -296,7 +279,6 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* Obstacles */}
                   <div>
                     <p style={pinnedSubhead}>Obstacles</p>
                     <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>No data</span>

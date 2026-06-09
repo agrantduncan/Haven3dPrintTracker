@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useInventory } from '../hooks/useInventory';
 import { usePaintStatus } from '../hooks/usePaintStatus';
-import { getTerrainStatus } from '../utils/status';
+import { getTerrainStatus, getMonsterStatus, combineStatus } from '../utils/status';
+import { getScenarioMonsterCounts } from '../utils/monsterUtils';
 import { PaintStatusDot } from '../components/PaintStatusDot';
 import type { TerrainCounts, ReadyStatus } from '../types';
 import terrainData from '../data/terrain.json';
@@ -19,10 +20,19 @@ const monsters = monstersData as MonstersJson;
 
 type FilterTab = 'all' | 'ready' | 'partial' | 'missing';
 
-const STATUS_COLORS: Record<ReadyStatus, string> = { ready: 'var(--ready)', partial: 'var(--partial)', missing: 'var(--missing)', 'no-data': 'var(--text-dim)' };
-const STATUS_LABELS: Record<ReadyStatus, string> = { ready: 'Ready', partial: 'Partial', missing: 'Missing', 'no-data': 'No Data' };
+const STATUS_COLORS: Record<ReadyStatus, string> = {
+  ready: 'var(--ready)', partial: 'var(--partial)', missing: 'var(--missing)', 'no-data': 'var(--text-dim)',
+};
+const STATUS_LABELS: Record<ReadyStatus, string> = {
+  ready: 'Ready', partial: 'Partial', missing: 'Missing', 'no-data': 'No Data',
+};
 
-interface ScenarioEntry { id: string; displayId: string; terrainData: Partial<TerrainCounts> | undefined; monsterNames: string[] | null; }
+interface ScenarioEntry {
+  id: string;
+  displayId: string;
+  terrainData: Partial<TerrainCounts> | undefined;
+  monsterNames: string[] | null;
+}
 
 function buildScenarioList(): ScenarioEntry[] {
   const entries: ScenarioEntry[] = [];
@@ -52,7 +62,6 @@ export default function Scenarios() {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<FilterTab>('all');
 
-  // Pre-fill search if navigated from pinned scenario
   useEffect(() => {
     const state = location.state as { search?: string } | null;
     if (state?.search) setSearch(state.search);
@@ -60,10 +69,15 @@ export default function Scenarios() {
 
   const scenariosWithStatus = useMemo(() => {
     return ALL_SCENARIOS.map(s => {
-      const status: ReadyStatus = s.terrainData ? getTerrainStatus(s.terrainData, inventory.terrain) : 'no-data';
-      return { ...s, status };
+      const tStatus: ReadyStatus = s.terrainData
+        ? getTerrainStatus(s.terrainData, inventory.terrain)
+        : 'no-data';
+      const monsterCounts = getScenarioMonsterCounts(s.id);
+      const mStatus = getMonsterStatus(monsterCounts, inventory.monsters);
+      const status = combineStatus(tStatus, mStatus);
+      return { ...s, status, tStatus, mStatus, monsterCounts };
     });
-  }, [inventory.terrain]);
+  }, [inventory.terrain, inventory.monsters]);
 
   const filtered = useMemo(() => {
     return scenariosWithStatus.filter(s => {
@@ -100,14 +114,10 @@ export default function Scenarios() {
         onBlur={e => { e.target.style.borderColor = 'var(--border)'; }}
       />
 
-      {/* Scrollable filter tabs */}
       <div className="filter-tabs" style={{ marginBottom: '16px' }}>
         {tabs.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid var(--accent)', background: tab === t.key ? 'var(--accent)' : 'var(--accent-dim)', color: tab === t.key ? 'var(--bg-base)' : 'var(--accent)', cursor: 'pointer', fontSize: '13px', fontWeight: tab === t.key ? 700 : 400, transition: 'all 150ms', whiteSpace: 'nowrap', flexShrink: 0, minHeight: '44px' }}
-          >
+          <button key={t.key} onClick={() => setTab(t.key)}
+            style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid var(--accent)', background: tab === t.key ? 'var(--accent)' : 'var(--accent-dim)', color: tab === t.key ? 'var(--bg-base)' : 'var(--accent)', cursor: 'pointer', fontSize: '13px', fontWeight: tab === t.key ? 700 : 400, transition: 'all 150ms', whiteSpace: 'nowrap', flexShrink: 0, minHeight: '44px' }}>
             {t.label}
           </button>
         ))}
@@ -124,8 +134,7 @@ export default function Scenarios() {
           const monsterText = s.monsterNames === null ? 'Unknown' : monsterNames.length === 0 ? 'None' : '';
 
           return (
-            <div
-              key={s.id}
+            <div key={s.id}
               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '12px 14px', transition: 'border-color 150ms, box-shadow 150ms' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-hover)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 8px var(--accent-dim)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
@@ -138,6 +147,7 @@ export default function Scenarios() {
                 </span>
               </div>
 
+              {/* Terrain chips */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px', alignItems: 'center' }}>
                 <span style={{ fontSize: '11px', color: 'var(--text-dim)', marginRight: '2px' }}>Terrain:</span>
                 {!hasTerrain ? (
@@ -156,20 +166,25 @@ export default function Scenarios() {
                 )}
               </div>
 
-              {/* Monster row with paint status dots */}
+              {/* Monsters with inventory + paint status dots */}
               <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
                 <span>Monsters: </span>
                 {monsterText ? (
                   <span style={{ color: 'var(--text-dim)', fontStyle: s.monsterNames === null ? 'italic' : 'normal' }}>{monsterText}</span>
                 ) : (
-                  <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center', verticalAlign: 'middle' }}>
-                    {monsterNames.slice(0, 6).map(name => (
-                      <span key={name} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--text-primary)' }}>
-                        <PaintStatusDot status={getStatus(name)} />
-                        {name}
-                        {monsterNames.indexOf(name) < monsterNames.length - 1 && monsterNames.length <= 6 ? ',' : ''}
-                      </span>
-                    ))}
+                  <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', verticalAlign: 'middle' }}>
+                    {monsterNames.slice(0, 6).map(name => {
+                      const have = inventory.monsters[name] === true;
+                      return (
+                        <span key={name} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--text-primary)' }}>
+                          {/* Inventory dot: green = have, red = missing */}
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: have ? 'var(--ready)' : 'var(--missing)', flexShrink: 0, display: 'inline-block' }} title={have ? 'Have set' : 'Missing'} />
+                          <PaintStatusDot status={getStatus(name)} />
+                          {name}
+                          {monsterNames.indexOf(name) < monsterNames.length - 1 && monsterNames.length <= 6 ? ',' : ''}
+                        </span>
+                      );
+                    })}
                     {monsterNames.length > 6 && (
                       <span style={{ color: 'var(--text-dim)' }}>+{monsterNames.length - 6} more</span>
                     )}

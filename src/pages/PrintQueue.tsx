@@ -6,7 +6,7 @@ import { PaintStatusDot } from '../components/PaintStatusDot';
 import type { PaintStatus } from '../hooks/usePaintStatus';
 import type { TerrainCounts } from '../types';
 import terrainData from '../data/terrain.json';
-import { MONSTER_MAX_NEEDED } from '../utils/monsterUtils';
+import { MONSTER_NAMES_SORTED, MONSTER_MAX_NEEDED } from '../utils/monsterUtils';
 
 type TerrainKey = keyof TerrainCounts;
 const TERRAIN_TYPES: TerrainKey[] = ['lava', 'metal', 'rock', 'snow', 'stone', 'wood'];
@@ -16,7 +16,7 @@ interface TerrainJson { maxNeeded: TerrainCounts; scenarios: Record<string, Part
 const terrain = terrainData as TerrainJson;
 
 interface TerrainGap { key: TerrainKey; label: string; have: number; need: number; deficit: number; }
-interface MonsterGap { name: string; have: number; need: number; }
+interface MonsterGap { name: string; standees: number; }
 
 type PaintFilter = 'all' | PaintStatus;
 
@@ -32,10 +32,11 @@ export default function PrintQueue() {
       .sort((a, b) => b.deficit - a.deficit);
   }, [inventory.terrain]);
 
+  // Monsters where the full set is NOT yet checked off
   const allMonsterGaps = useMemo((): MonsterGap[] => {
-    return Object.entries(MONSTER_MAX_NEEDED)
-      .map(([name, need]) => ({ name, have: inventory.monsters[name] ?? 0, need }))
-      .filter(g => g.have < g.need);
+    return MONSTER_NAMES_SORTED
+      .filter(name => inventory.monsters[name] !== true)
+      .map(name => ({ name, standees: MONSTER_MAX_NEEDED[name] ?? 0 }));
   }, [inventory.monsters]);
 
   const monsterGaps = useMemo(() => {
@@ -45,7 +46,7 @@ export default function PrintQueue() {
         const aPrinting = inventory.printing.includes(a.name);
         const bPrinting = inventory.printing.includes(b.name);
         if (aPrinting !== bPrinting) return aPrinting ? 1 : -1;
-        return (b.need - b.have) - (a.need - a.have);
+        return b.standees - a.standees;
       });
   }, [allMonsterGaps, paintFilter, inventory.printing, getStatus]);
 
@@ -90,16 +91,15 @@ export default function PrintQueue() {
       {/* Monster Gaps */}
       <section style={{ marginBottom: '32px' }}>
         <h3 style={sectionHeadingStyle}>Monster Gaps</h3>
+        <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '10px' }}>
+          Monsters not yet checked off in Inventory. Mark printing to track in-progress prints.
+        </p>
 
-        {/* Paint status filter */}
         {!allMonstersCovered && (
           <div className="filter-tabs" style={{ marginBottom: '12px' }}>
             {paintFilters.map(f => (
-              <button
-                key={f.key}
-                onClick={() => setPaintFilter(f.key)}
-                style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid var(--accent)', background: paintFilter === f.key ? 'var(--accent)' : 'var(--accent-dim)', color: paintFilter === f.key ? 'var(--bg-base)' : 'var(--accent)', cursor: 'pointer', fontSize: '12px', fontWeight: paintFilter === f.key ? 700 : 400, transition: 'all 150ms', whiteSpace: 'nowrap', flexShrink: 0, minHeight: '44px' }}
-              >
+              <button key={f.key} onClick={() => setPaintFilter(f.key)}
+                style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid var(--accent)', background: paintFilter === f.key ? 'var(--accent)' : 'var(--accent-dim)', color: paintFilter === f.key ? 'var(--bg-base)' : 'var(--accent)', cursor: 'pointer', fontSize: '12px', fontWeight: paintFilter === f.key ? 700 : 400, transition: 'all 150ms', whiteSpace: 'nowrap', flexShrink: 0, minHeight: '44px' }}>
                 {f.label}
               </button>
             ))}
@@ -107,7 +107,7 @@ export default function PrintQueue() {
         )}
 
         {allMonstersCovered ? (
-          <div style={{ color: 'var(--ready)', fontSize: '14px', fontWeight: 600 }}>✓ All monsters accounted for</div>
+          <div style={{ color: 'var(--ready)', fontSize: '14px', fontWeight: 600 }}>✓ All monsters checked off</div>
         ) : monsterGaps.length === 0 ? (
           <div style={{ color: 'var(--text-dim)', fontSize: '13px', fontStyle: 'italic' }}>No monsters match this filter</div>
         ) : (
@@ -124,11 +124,10 @@ export default function PrintQueue() {
                   {isPrinting && <span style={{ fontSize: '11px', color: 'var(--partial)', whiteSpace: 'nowrap', flexShrink: 0 }}>🖨 Printing</span>}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-dim)' }}>{g.have}/{g.need}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>{g.standees} standees</span>
                   <button
                     onClick={() => togglePrinting(g.name)}
-                    style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--accent)', background: isPrinting ? 'var(--accent)' : 'var(--accent-dim)', color: isPrinting ? 'var(--bg-base)' : 'var(--accent)', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 150ms', whiteSpace: 'nowrap', minHeight: '44px' }}
-                  >
+                    style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--accent)', background: isPrinting ? 'var(--accent)' : 'var(--accent-dim)', color: isPrinting ? 'var(--bg-base)' : 'var(--accent)', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 150ms', whiteSpace: 'nowrap', minHeight: '44px' }}>
                     <Printer size={12} />
                     {isPrinting ? 'Unmark' : 'Mark'}
                   </button>

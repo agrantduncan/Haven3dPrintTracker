@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Map, Package, Printer } from 'lucide-react';
+import { InventoryProvider, useInventory } from './hooks/useInventory';
 import Dashboard from './pages/Dashboard';
 import Scenarios from './pages/Scenarios';
 import Inventory from './pages/Inventory';
@@ -11,6 +12,30 @@ const NAV_ITEMS = [
   { to: '/inventory', icon: Package, label: 'Inventory' },
   { to: '/print-queue', icon: Printer, label: 'Print Queue' },
 ];
+
+function SaveStatusBar() {
+  const { saveStatus } = useInventory();
+  if (saveStatus === 'idle') return null;
+
+  const style: React.CSSProperties = {
+    fontSize: '11px',
+    fontWeight: 600,
+    padding: '3px 10px',
+    borderRadius: '10px',
+    whiteSpace: 'nowrap',
+    ...(saveStatus === 'saving' && { color: 'var(--partial)', background: 'rgba(255,170,0,0.12)' }),
+    ...(saveStatus === 'saved' && { color: 'var(--ready)', background: 'rgba(0,255,136,0.10)' }),
+    ...(saveStatus === 'error' && { color: 'var(--missing)', background: 'rgba(255,68,68,0.13)' }),
+  };
+
+  return (
+    <span style={style}>
+      {saveStatus === 'saving' && 'Saving…'}
+      {saveStatus === 'saved' && 'Saved ✓'}
+      {saveStatus === 'error' && 'Save failed — check connection'}
+    </span>
+  );
+}
 
 function NavItems() {
   return (
@@ -44,6 +69,8 @@ function NavItems() {
 }
 
 function Layout() {
+  const { isLoading } = useInventory();
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar — shown at 768px+ */}
@@ -61,11 +88,14 @@ function Layout() {
         zIndex: 50,
         paddingTop: 'env(safe-area-inset-top)',
       }} className="app-sidebar">
-        <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ padding: '20px 16px 12px', borderBottom: '1px solid var(--border)' }}>
           <h1 className="font-fantasy" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '2px' }}>
             FROSTHAVEN
           </h1>
           <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>3D Print Tracker</p>
+          <div style={{ marginTop: '8px', minHeight: '18px' }}>
+            <SaveStatusBar />
+          </div>
         </div>
         <nav style={{ marginTop: '8px' }}>
           <NavItems />
@@ -75,12 +105,24 @@ function Layout() {
       {/* Main content */}
       <main style={{ flex: 1, minHeight: '100vh' }} className="app-main">
         <div style={{ padding: '24px', maxWidth: '100%' }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/scenarios" element={<Scenarios />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/print-queue" element={<PrintQueue />} />
-          </Routes>
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '16px' }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                border: '3px solid var(--border)',
+                borderTopColor: 'var(--accent)',
+                animation: 'spin 0.8s linear infinite',
+              }} />
+              <p style={{ color: 'var(--text-dim)', fontSize: '14px' }}>Loading inventory…</p>
+            </div>
+          ) : (
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/scenarios" element={<Scenarios />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/print-queue" element={<PrintQueue />} />
+            </Routes>
+          )}
         </div>
       </main>
 
@@ -125,13 +167,12 @@ function Layout() {
       </nav>
 
       <style>{`
-        /* Desktop / iPad: show sidebar, hide bottom nav */
+        @keyframes spin { to { transform: rotate(360deg); } }
         @media (min-width: 768px) {
           .app-sidebar { display: flex !important; }
           .app-main { margin-left: 220px; padding-bottom: 0; }
           .app-bottom-nav { display: none !important; }
         }
-        /* Mobile: hide sidebar, show bottom nav */
         @media (max-width: 767px) {
           .app-sidebar { display: none !important; }
           .app-main { margin-left: 0; }
@@ -146,7 +187,9 @@ function Layout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout />
+      <InventoryProvider>
+        <Layout />
+      </InventoryProvider>
     </BrowserRouter>
   );
 }

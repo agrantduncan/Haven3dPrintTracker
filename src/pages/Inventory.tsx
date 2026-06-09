@@ -3,7 +3,7 @@ import { useInventory } from '../hooks/useInventory';
 import { usePaintStatus } from '../hooks/usePaintStatus';
 import { PaintStatusToggle } from '../components/PaintStatusToggle';
 import type { TerrainCounts } from '../types';
-import { MONSTER_NAMES_SORTED } from '../utils/monsterUtils';
+import { MONSTER_NAMES_SORTED, MONSTER_MAX_NEEDED } from '../utils/monsterUtils';
 import obstaclesData from '../data/obstacles.json';
 
 type TerrainKey = keyof TerrainCounts;
@@ -21,19 +21,10 @@ interface ObstaclesJson { note: string; types: string[]; scenarios: Record<strin
 const obstacles = obstaclesData as ObstaclesJson;
 const ALL_OBSTACLE_TYPES: string[] = obstacles.types.slice().sort();
 
-function SavedIndicator({ show }: { show: boolean }) {
-  return (
-    <span style={{ fontSize: '12px', color: 'var(--ready)', opacity: show ? 1 : 0, transition: 'opacity 500ms', marginLeft: '8px' }}>
-      Saved ✓
-    </span>
-  );
-}
-
 function NumberInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [display, setDisplay] = useState<string>(String(value));
   const [prevValue, setPrevValue] = useState(value);
   if (value !== prevValue) { setPrevValue(value); setDisplay(String(value)); }
-
   return (
     <input
       type="number"
@@ -50,18 +41,8 @@ function NumberInput({ value, onChange }: { value: number; onChange: (v: number)
 export default function Inventory() {
   const { inventory, updateTerrain, updateMonster, updateObstacle } = useInventory();
   const { getStatus, cycleStatus } = usePaintStatus();
-  const [showSaved, setShowSaved] = useState(false);
   const [monsterSearch, setMonsterSearch] = useState('');
   const [obstacleSearch, setObstacleSearch] = useState('');
-
-  const triggerSaved = useCallback(() => {
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 2000);
-  }, []);
-
-  const handleTerrainChange = useCallback((key: TerrainKey, v: number) => { updateTerrain(key, v); triggerSaved(); }, [updateTerrain, triggerSaved]);
-  const handleMonsterChange = useCallback((name: string, v: number) => { updateMonster(name, v); triggerSaved(); }, [updateMonster, triggerSaved]);
-  const handleObstacleChange = useCallback((name: string, v: number) => { updateObstacle(name, v); triggerSaved(); }, [updateObstacle, triggerSaved]);
 
   const filteredMonsters = useMemo(() =>
     MONSTER_NAMES_SORTED.filter(n => monsterSearch === '' || n.toLowerCase().includes(monsterSearch.toLowerCase())),
@@ -76,12 +57,13 @@ export default function Inventory() {
   const sectionHeadingStyle: React.CSSProperties = { fontSize: '16px', fontWeight: 600, color: 'var(--accent)', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid var(--border)', fontFamily: "'Cinzel', serif" };
   const searchInputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '16px', marginBottom: '8px', outline: 'none', boxSizing: 'border-box' };
 
+  const handleObstacleChange = useCallback((name: string, v: number) => updateObstacle(name, v), [updateObstacle]);
+
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 className="font-fantasy" style={{ fontSize: '24px', fontWeight: 700, color: 'var(--accent)' }}>Inventory</h2>
-        <SavedIndicator show={showSaved} />
-      </div>
+      <h2 className="font-fantasy" style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: 'var(--accent)' }}>
+        Inventory
+      </h2>
 
       {/* Terrain */}
       <section style={{ marginBottom: '32px' }}>
@@ -90,7 +72,7 @@ export default function Inventory() {
           {TERRAIN_TYPES.map(({ key, label }) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', minHeight: '56px' }}>
               <label style={{ fontSize: '15px', color: 'var(--text-primary)' }}>{label}</label>
-              <NumberInput value={inventory.terrain[key]} onChange={v => handleTerrainChange(key, v)} />
+              <NumberInput value={inventory.terrain[key]} onChange={v => updateTerrain(key, v)} />
             </div>
           ))}
         </div>
@@ -99,17 +81,62 @@ export default function Inventory() {
       {/* Monsters */}
       <section style={{ marginBottom: '32px' }}>
         <h3 style={sectionHeadingStyle}>Monsters</h3>
-        <input type="text" placeholder="Filter monsters..." value={monsterSearch} onChange={e => setMonsterSearch(e.target.value)} style={searchInputStyle}
+        <p style={{ fontSize: '12px', color: 'var(--text-dim)', marginBottom: '8px' }}>
+          Check each monster when you have the full standee set printed.
+        </p>
+        <input type="text" placeholder="Filter monsters…" value={monsterSearch} onChange={e => setMonsterSearch(e.target.value)} style={searchInputStyle}
           onFocus={e => { e.target.style.borderColor = 'var(--accent)'; }}
           onBlur={e => { e.target.style.borderColor = 'var(--border)'; }} />
-        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '4px' }}>
-          {filteredMonsters.map((name, i) => (
-            <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '10px 14px', background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)', borderBottom: i < filteredMonsters.length - 1 ? '1px solid var(--border)' : 'none', minHeight: '52px' }}>
-              <span style={{ fontSize: '14px', color: 'var(--text-primary)', flex: 1, minWidth: 0 }}>{name}</span>
-              <NumberInput value={inventory.monsters[name] ?? 0} onChange={v => handleMonsterChange(name, v)} />
-              <PaintStatusToggle status={getStatus(name)} onCycle={() => { cycleStatus(name); triggerSaved(); }} />
-            </div>
-          ))}
+        <div style={{ border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+          {filteredMonsters.map((name, i) => {
+            const checked = inventory.monsters[name] === true;
+            const standees = MONSTER_MAX_NEEDED[name] ?? 0;
+            return (
+              <div
+                key={name}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '10px 14px',
+                  background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)',
+                  borderBottom: i < filteredMonsters.length - 1 ? '1px solid var(--border)' : 'none',
+                  minHeight: '52px',
+                  cursor: 'pointer',
+                  transition: 'background 100ms',
+                }}
+                onClick={() => updateMonster(name, !checked)}
+              >
+                {/* Checkbox */}
+                <div style={{
+                  width: 20, height: 20, flexShrink: 0, borderRadius: '4px',
+                  border: `2px solid ${checked ? 'var(--ready)' : 'var(--border)'}`,
+                  background: checked ? 'var(--ready)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 150ms',
+                }}>
+                  {checked && (
+                    <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                      <path d="M1 5L4.5 8.5L11 1.5" stroke="var(--bg-base)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* Name */}
+                <span style={{ fontSize: '14px', color: checked ? 'var(--text-primary)' : 'var(--text-dim)', flex: 1, minWidth: 0 }}>
+                  {name}
+                </span>
+
+                {/* Standee count (muted, right) */}
+                <span style={{ fontSize: '12px', color: 'var(--text-dim)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {standees} standees
+                </span>
+
+                {/* Paint status toggle — stop propagation so it doesn't toggle checkbox */}
+                <div onClick={e => e.stopPropagation()}>
+                  <PaintStatusToggle status={getStatus(name)} onCycle={() => cycleStatus(name)} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -119,7 +146,7 @@ export default function Inventory() {
         <p style={{ fontSize: '13px', color: 'var(--text-dim)', marginBottom: '10px', fontStyle: 'italic' }}>
           Obstacle data is a placeholder — fill in manually as needed
         </p>
-        <input type="text" placeholder="Filter obstacles..." value={obstacleSearch} onChange={e => setObstacleSearch(e.target.value)} style={searchInputStyle}
+        <input type="text" placeholder="Filter obstacles…" value={obstacleSearch} onChange={e => setObstacleSearch(e.target.value)} style={searchInputStyle}
           onFocus={e => { e.target.style.borderColor = 'var(--accent)'; }}
           onBlur={e => { e.target.style.borderColor = 'var(--border)'; }} />
         <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '4px' }}>
@@ -127,7 +154,6 @@ export default function Inventory() {
             <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '10px 14px', background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)', borderBottom: i < filteredObstacles.length - 1 ? '1px solid var(--border)' : 'none', minHeight: '52px' }}>
               <span style={{ fontSize: '14px', color: 'var(--text-primary)', flex: 1, minWidth: 0 }}>{name}</span>
               <NumberInput value={inventory.obstacles[name] ?? 0} onChange={v => handleObstacleChange(name, v)} />
-              <PaintStatusToggle status={getStatus(name)} onCycle={() => { cycleStatus(name); triggerSaved(); }} />
             </div>
           ))}
         </div>
