@@ -37,15 +37,16 @@ function writeLocal(key: string, value: unknown) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* offline ok */ }
 }
 
-// Migrate old numeric monster format {name: number} → {name: boolean}.
-// Monsters with count > 0 or any paint status become true.
-function migrateMonsters(raw: Record<string, unknown>): { result: Record<string, boolean>; didMigrate: boolean } {
-  let paintStatus: Record<string, string> = {};
+function readPaintStatus(): Record<string, string> {
   try {
     const ps = localStorage.getItem('fh:paintstatus');
-    if (ps) paintStatus = JSON.parse(ps) as Record<string, string>;
-  } catch { /* ignore */ }
+    return ps ? (JSON.parse(ps) as Record<string, string>) : {};
+  } catch { return {}; }
+}
 
+// Migrate old numeric monster format {name: number} → {name: boolean}.
+function migrateMonsters(raw: Record<string, unknown>): { result: Record<string, boolean>; didMigrate: boolean } {
+  const paintStatus = readPaintStatus();
   const result: Record<string, boolean> = {};
   let didMigrate = false;
   for (const [name, val] of Object.entries(raw)) {
@@ -80,6 +81,12 @@ function useInventoryImpl(): InventoryContextValue {
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
+  // Tracks whether we've completed the initial Neon load so the save-on-change
+  // effect doesn't fire during (or immediately after) the initial load.
+  const isReadyRef = useRef(false);
+  // Snapshot of last-saved inventory for change detection in the save effect.
+  const lastSavedRef = useRef<Inventory | null>(null);
+
   const pendingRef = useRef<Map<string, unknown>>(new Map());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const savedClearRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -104,6 +111,29 @@ function useInventoryImpl(): InventoryContextValue {
     }, 800);
   }, []);
 
+  // ── Save-on-change effect ───────────────────────────────────────────────────
+  // Called whenever inventory changes. Skipped before the initial Neon load
+  // completes (isReadyRef = false) and skipped on the first render post-load
+  // (lastSavedRef = null, which we use to record the baseline).
+  // Only user-initiated changes trigger a save.
+  useEffect(() => {
+    if (!isReadyRef.current) return;
+    if (lastSavedRef.current === null) {
+      // First render after load — record baseline, do not save
+      lastSavedRef.current = inventory;
+      return;
+    }
+    const prev = lastSavedRef.current;
+    lastSavedRef.current = inventory;
+    // Reference equality: objects are replaced on every state update
+    if (prev.terrain !== inventory.terrain) scheduleSave(KEYS.terrain, inventory.terrain);
+    if (prev.monsters !== inventory.monsters) scheduleSave(KEYS.monsters, inventory.monsters);
+    if (prev.obstacles !== inventory.obstacles) scheduleSave(KEYS.obstacles, inventory.obstacles);
+    if (prev.printing !== inventory.printing) scheduleSave(KEYS.printing, inventory.printing);
+    if (prev.pinned !== inventory.pinned) scheduleSave(KEYS.pinned, inventory.pinned);
+  }, [inventory, scheduleSave]);
+
+  // ── Initial Neon load ───────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
@@ -122,20 +152,27 @@ function useInventoryImpl(): InventoryContextValue {
 
       const rawMonsters = (remote[KEYS.monsters] as Record<string, unknown> | undefined)
         ?? readLocal<Record<string, unknown>>(KEYS.monsters, {});
-      const { result: monsters, didMigrate } = migrateMonsters(rawMonsters);
+      const { result: migratedMonsters, didMigrate } = migrateMonsters(rawMonsters);
+
+      // Auto-check any monster with paint status != 'unpainted' (Bug 2 fix)
+      const paintStatus = readPaintStatus();
+      const monsters: Record<string, boolean> = { ...migratedMonsters };
+      let monstersAutoUpdated = false;
+      for (const [name, status] of Object.entries(paintStatus)) {
+        if (status !== 'unpainted' && monsters[name] !== true) {
+          monsters[name] = true;
+          monstersAutoUpdated = true;
+        }
+      }
 
       const obstacles = (remote[KEYS.obstacles] as Record<string, number> | undefined)
         ?? readLocal<Record<string, number>>(KEYS.obstacles, {});
-
       const printing = (remote[KEYS.printing] as string[] | undefined)
         ?? readLocal<string[]>(KEYS.printing, []);
-
       const pinned = (remote[KEYS.pinned] as string[] | undefined)
         ?? readLocal<string[]>(KEYS.pinned, []);
 
       const inv: Inventory = { terrain, monsters, obstacles, printing, pinned };
-      setInventory(inv);
-      setIsLoading(false);
 
       // Offline backup
       writeLocal(KEYS.terrain, terrain);
@@ -144,66 +181,56 @@ function useInventoryImpl(): InventoryContextValue {
       writeLocal(KEYS.printing, printing);
       writeLocal(KEYS.pinned, pinned);
 
-      // If we migrated monster format, persist the new format to Neon
-      if (didMigrate && neonOk) {
+      // Write back to Neon if data changed during load (migration or auto-check)
+      if (neonOk && (didMigrate || monstersAutoUpdated)) {
         try { await syncInventory(KEYS.monsters, monsters); } catch { /* ok */ }
       }
+
+      if (cancelled) return;
+
+      // Mark as ready BEFORE setting state so the save-on-change effect
+      // can immediately recognise this as the baseline (not a user change).
+      isReadyRef.current = true;
+      setInventory(inv);
+      setIsLoading(false);
     }
 
     void load();
     return () => { cancelled = true; };
   }, []);
 
+  // ── Pure state updaters (no side effects) ──────────────────────────────────
   const updateTerrain = useCallback((type: keyof TerrainCounts, value: number) => {
-    setInventory(prev => {
-      const terrain = { ...prev.terrain, [type]: Math.max(0, value) };
-      scheduleSave(KEYS.terrain, terrain);
-      return { ...prev, terrain };
-    });
-  }, [scheduleSave]);
+    setInventory(prev => ({ ...prev, terrain: { ...prev.terrain, [type]: Math.max(0, value) } }));
+  }, []);
 
   const updateMonster = useCallback((name: string, checked: boolean) => {
-    setInventory(prev => {
-      const monsters = { ...prev.monsters, [name]: checked };
-      scheduleSave(KEYS.monsters, monsters);
-      return { ...prev, monsters };
-    });
-  }, [scheduleSave]);
+    setInventory(prev => ({ ...prev, monsters: { ...prev.monsters, [name]: checked } }));
+  }, []);
 
   const updateObstacle = useCallback((name: string, value: number) => {
-    setInventory(prev => {
-      const obstacles = { ...prev.obstacles, [name]: Math.max(0, value) };
-      scheduleSave(KEYS.obstacles, obstacles);
-      return { ...prev, obstacles };
-    });
-  }, [scheduleSave]);
+    setInventory(prev => ({ ...prev, obstacles: { ...prev.obstacles, [name]: Math.max(0, value) } }));
+  }, []);
 
   const togglePrinting = useCallback((name: string) => {
     setInventory(prev => {
       const printing = prev.printing.includes(name)
         ? prev.printing.filter(n => n !== name)
         : [...prev.printing, name];
-      scheduleSave(KEYS.printing, printing);
       return { ...prev, printing };
     });
-  }, [scheduleSave]);
+  }, []);
 
   const pin = useCallback((id: string) => {
     setInventory(prev => {
       if (prev.pinned.includes(id)) return prev;
-      const pinned = [...prev.pinned, id];
-      scheduleSave(KEYS.pinned, pinned);
-      return { ...prev, pinned };
+      return { ...prev, pinned: [...prev.pinned, id] };
     });
-  }, [scheduleSave]);
+  }, []);
 
   const unpin = useCallback((id: string) => {
-    setInventory(prev => {
-      const pinned = prev.pinned.filter(p => p !== id);
-      scheduleSave(KEYS.pinned, pinned);
-      return { ...prev, pinned };
-    });
-  }, [scheduleSave]);
+    setInventory(prev => ({ ...prev, pinned: prev.pinned.filter(p => p !== id) }));
+  }, []);
 
   const isPinned = useCallback((id: string) => inventory.pinned.includes(id), [inventory.pinned]);
 
