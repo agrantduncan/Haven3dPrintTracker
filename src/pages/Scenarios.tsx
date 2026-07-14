@@ -8,6 +8,7 @@ import { PaintStatusDot } from '../components/PaintStatusDot';
 import type { TerrainCounts, ReadyStatus } from '../types';
 import terrainData from '../data/terrain.json';
 import monstersData from '../data/monsters.json';
+import scenarioPagesData from '../data/scenarioPages.json';
 
 type TerrainKey = keyof TerrainCounts;
 const TERRAIN_TYPES: TerrainKey[] = ['lava', 'metal', 'rock', 'snow', 'stone', 'wood'];
@@ -17,6 +18,12 @@ interface MonstersJson { [id: string]: Record<string, { normal: number[]; elite:
 
 const terrain = terrainData as TerrainJson;
 const monsters = monstersData as MonstersJson;
+
+interface ScenarioPagesJson { [id: string]: { title: string | null; grid: string | null; pages: string[] } }
+const scenarioPages = scenarioPagesData as ScenarioPagesJson;
+
+// 4A/4B share book scenario 4
+const getBookPages = (id: string) => scenarioPages[id.replace(/[AB]$/, '')];
 
 type FilterTab = 'all' | 'ready' | 'partial' | 'missing';
 
@@ -61,6 +68,7 @@ export default function Scenarios() {
   const location = useLocation();
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<FilterTab>('all');
+  const [openPages, setOpenPages] = useState<string | null>(null);
 
   useEffect(() => {
     const state = location.state as { search?: string } | null;
@@ -140,7 +148,12 @@ export default function Scenarios() {
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span className="font-fantasy" style={{ fontSize: '14px', fontWeight: 600 }}>Scenario {s.displayId}</span>
+                <span className="font-fantasy" style={{ fontSize: '14px', fontWeight: 600 }}>
+                  Scenario {s.displayId}
+                  {getBookPages(s.id)?.title && (
+                    <span style={{ fontWeight: 400, color: 'var(--text-dim)' }}> — {getBookPages(s.id)!.title}</span>
+                  )}
+                </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: STATUS_COLORS[s.status] }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_COLORS[s.status], display: 'inline-block' }} />
                   {STATUS_LABELS[s.status]}
@@ -191,6 +204,36 @@ export default function Scenarios() {
                   </span>
                 )}
               </div>
+
+              {/* Scenario book pages (map layout + full scenario) */}
+              {(() => {
+                const book = getBookPages(s.id);
+                if (!book || book.pages.length === 0) return null;
+                const isOpen = openPages === s.id;
+                return (
+                  <div style={{ marginTop: '8px' }}>
+                    <button
+                      onClick={() => setOpenPages(isOpen ? null : s.id)}
+                      style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-surface-2)', color: 'var(--accent)', cursor: 'pointer', fontSize: '12px', minHeight: '32px' }}
+                    >
+                      {isOpen ? '▾ Hide' : '▸ Map & Pages'} ({book.pages.length} page{book.pages.length !== 1 ? 's' : ''}{book.grid ? `, hex ${book.grid}` : ''})
+                    </button>
+                    {isOpen && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                        {book.pages.map(img => (
+                          <img
+                            key={img}
+                            src={`/images/scenarios/${img}`}
+                            alt={`Scenario ${s.displayId} — ${book.title ?? 'book page'}`}
+                            loading="lazy"
+                            style={{ width: '100%', maxWidth: '820px', borderRadius: '4px', border: '1px solid var(--border)' }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
