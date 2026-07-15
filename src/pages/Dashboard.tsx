@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useInventory } from '../hooks/useInventory';
 import { usePaintStatus } from '../hooks/usePaintStatus';
 import { getScenarioStatus } from '../utils/status';
-import { MONSTER_MAX_NEEDED, MONSTER_NAMES_SORTED, getScenarioMonsterCounts } from '../utils/monsterUtils';
+import { MONSTER_NAMES_SORTED, getScenarioMonsterCounts, getStandeeCount } from '../utils/monsterUtils';
 import { ALL_SCENARIO_IDS } from '../utils/scenarioHelpers';
 import { ScenarioLookupCard } from '../components/ScenarioLookupCard';
 import { PaintStatusDot } from '../components/PaintStatusDot';
@@ -132,12 +132,10 @@ export default function Dashboard() {
           }
         }
       }
-      const counts = getScenarioMonsterCounts(id);
       const missing = pinnedMissingMonsters(id);
       if (Array.isArray(missing)) {
         for (const name of missing) {
-          const cur = monsterAgg.get(name) ?? { standees: 0, scenarios: [] };
-          cur.standees = Math.max(cur.standees, counts?.[name] ?? 0);
+          const cur = monsterAgg.get(name) ?? { standees: getStandeeCount(name), scenarios: [] };
           cur.scenarios.push(id);
           monsterAgg.set(name, cur);
         }
@@ -264,7 +262,7 @@ export default function Dashboard() {
           <div style={{ maxHeight: '400px', overflowY: 'auto', borderTop: '1px solid var(--border)' }}>
             {MONSTER_NAMES_SORTED.map((name, i) => {
               const checked = inventory.monsters[name] === true;
-              const standees = MONSTER_MAX_NEEDED[name] ?? 0;
+              const standees = getStandeeCount(name);
               const ps = getStatus(name);
               return (
                 <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)', borderBottom: i < MONSTER_NAMES_SORTED.length - 1 ? '1px solid var(--border)' : 'none' }}>

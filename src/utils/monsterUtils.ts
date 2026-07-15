@@ -1,4 +1,5 @@
 import monstersData from '../data/monsters.json';
+import monsterStandeesData from '../data/monsterStandees.json';
 
 interface MonsterEntry {
   normal: number[];
@@ -23,6 +24,15 @@ export const MONSTER_MAX_NEEDED: Record<string, number> = (() => {
 })();
 
 export const MONSTER_NAMES_SORTED: string[] = Object.keys(MONSTER_MAX_NEEDED).sort();
+
+const MONSTER_STANDEES = (monsterStandeesData as { counts: Record<string, number> }).counts;
+
+// Standees in the physical/printed set for a monster type. Falls back to the
+// max 2-player requirement for variants not in the reference chart (bosses,
+// scenario-specific variants like "Living Bones (65)").
+export function getStandeeCount(name: string): number {
+  return MONSTER_STANDEES[name] ?? MONSTER_MAX_NEEDED[name] ?? 0;
+}
 
 const NO_MONSTER_SCENARIOS = new Set(['91']);
 

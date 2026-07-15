@@ -6,7 +6,7 @@ import { PaintStatusDot } from '../components/PaintStatusDot';
 import type { PaintStatus } from '../hooks/usePaintStatus';
 import type { TerrainCounts } from '../types';
 import terrainData from '../data/terrain.json';
-import { MONSTER_NAMES_SORTED, MONSTER_MAX_NEEDED } from '../utils/monsterUtils';
+import { MONSTER_NAMES_SORTED, getStandeeCount } from '../utils/monsterUtils';
 
 type TerrainKey = keyof TerrainCounts;
 const TERRAIN_TYPES: TerrainKey[] = ['lava', 'metal', 'rock', 'snow', 'stone', 'wood'];
@@ -36,7 +36,7 @@ export default function PrintQueue() {
   const allMonsterGaps = useMemo((): MonsterGap[] => {
     return MONSTER_NAMES_SORTED
       .filter(name => inventory.monsters[name] !== true)
-      .map(name => ({ name, standees: MONSTER_MAX_NEEDED[name] ?? 0 }));
+      .map(name => ({ name, standees: getStandeeCount(name) }));
   }, [inventory.monsters]);
 
   const monsterGaps = useMemo(() => {

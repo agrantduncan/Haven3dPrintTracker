@@ -3,7 +3,7 @@ import { useInventory } from '../hooks/useInventory';
 import { usePaintStatus } from '../hooks/usePaintStatus';
 import { PaintStatusToggle } from '../components/PaintStatusToggle';
 import type { TerrainCounts } from '../types';
-import { MONSTER_NAMES_SORTED, MONSTER_MAX_NEEDED } from '../utils/monsterUtils';
+import { MONSTER_NAMES_SORTED, getStandeeCount } from '../utils/monsterUtils';
 import obstaclesData from '../data/obstacles.json';
 
 type TerrainKey = keyof TerrainCounts;
@@ -90,7 +90,7 @@ export default function Inventory() {
         <div style={{ border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
           {filteredMonsters.map((name, i) => {
             const checked = inventory.monsters[name] === true;
-            const standees = MONSTER_MAX_NEEDED[name] ?? 0;
+            const standees = getStandeeCount(name);
             return (
               <div
                 key={name}
