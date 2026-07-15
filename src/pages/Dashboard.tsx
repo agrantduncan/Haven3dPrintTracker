@@ -84,6 +84,55 @@ export default function Dashboard() {
     return Object.keys(counts).filter(name => inventory.monsters[name] !== true);
   }
 
+  interface NeededItem {
+    kind: 'terrain' | 'monster';
+    label: string;
+    shortfall?: number;
+    scenarios: string[];
+  }
+
+  // Aggregate gaps across pinned scenarios, ranked by how many pins each unblocks.
+  // Terrain shortfall is the max across pins (tiles are reused between scenarios).
+  const mostNeeded = useMemo<NeededItem[]>(() => {
+    const terrainAgg = new Map<TerrainKey, { shortfall: number; scenarios: string[] }>();
+    const monsterAgg = new Map<string, string[]>();
+    for (const id of inventory.pinned) {
+      const t = terrain.scenarios[terrainIdFor(id)];
+      if (t) {
+        for (const k of TERRAIN_TYPES_ARR) {
+          const short = (t[k] ?? 0) - inventory.terrain[k];
+          if (short > 0) {
+            const cur = terrainAgg.get(k) ?? { shortfall: 0, scenarios: [] };
+            cur.shortfall = Math.max(cur.shortfall, short);
+            cur.scenarios.push(id);
+            terrainAgg.set(k, cur);
+          }
+        }
+      }
+      const missing = pinnedMissingMonsters(id);
+      if (Array.isArray(missing)) {
+        for (const name of missing) {
+          monsterAgg.set(name, [...(monsterAgg.get(name) ?? []), id]);
+        }
+      }
+    }
+    const items: NeededItem[] = [
+      ...[...terrainAgg].map(([k, v]) => ({
+        kind: 'terrain' as const,
+        label: k.charAt(0).toUpperCase() + k.slice(1),
+        shortfall: v.shortfall,
+        scenarios: v.scenarios,
+      })),
+      ...[...monsterAgg].map(([name, ids]) => ({
+        kind: 'monster' as const, label: name, scenarios: ids,
+      })),
+    ];
+    // Most pins unblocked first; among ties, smallest print job first
+    items.sort((a, b) => b.scenarios.length - a.scenarios.length || (a.shortfall ?? 1) - (b.shortfall ?? 1));
+    return items;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inventory.pinned, inventory.terrain, inventory.monsters]);
+
   const pinnedSubhead: React.CSSProperties = {
     fontSize: '10px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
     color: 'var(--text-dim)', margin: '0 0 4px',
@@ -203,6 +252,51 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Most Needed across pinned scenarios */}
+      {inventory.pinned.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <h3 className="font-fantasy" style={{ fontSize: '15px', fontWeight: 600, color: 'var(--accent)', marginBottom: '4px', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>
+            Most Needed
+          </h3>
+          <p style={{ fontSize: '11px', color: 'var(--text-dim)', margin: '0 0 12px' }}>
+            What unblocks the most pinned scenarios
+          </p>
+          {mostNeeded.length === 0 ? (
+            <p style={{ fontSize: '13px', color: 'var(--ready)' }}>✓ Everything for your pinned scenarios is covered</p>
+          ) : (
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+              {mostNeeded.slice(0, 8).map((item, i) => (
+                <div key={`${item.kind}-${item.label}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 14px', background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)', borderBottom: i < Math.min(mostNeeded.length, 8) - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: '3px', background: 'var(--accent-dim)', color: 'var(--accent)', flexShrink: 0 }}>
+                      {item.kind}
+                    </span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.label}
+                      {item.kind === 'terrain' && (
+                        <span style={{ color: 'var(--missing)' }}> — print {item.shortfall} more</span>
+                      )}
+                      {item.kind === 'monster' && (
+                        <span style={{ color: 'var(--missing)' }}> — need set</span>
+                      )}
+                    </span>
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-dim)', flexShrink: 0, textAlign: 'right' }}>
+                    unblocks <strong style={{ color: 'var(--accent)' }}>{item.scenarios.length}</strong> pin{item.scenarios.length !== 1 ? 's' : ''}
+                    <span style={{ display: 'block', fontSize: '10px' }}>#{item.scenarios.join(', #')}</span>
+                  </span>
+                </div>
+              ))}
+              {mostNeeded.length > 8 && (
+                <div style={{ padding: '8px 14px', fontSize: '11px', color: 'var(--text-dim)', borderTop: '1px solid var(--border)' }}>
+                  +{mostNeeded.length - 8} more item{mostNeeded.length - 8 !== 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pinned Scenarios */}
       <div>
