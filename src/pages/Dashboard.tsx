@@ -10,6 +10,7 @@ import { ScenarioLookupCard } from '../components/ScenarioLookupCard';
 import { PaintStatusDot } from '../components/PaintStatusDot';
 import type { TerrainCounts, ReadyStatus } from '../types';
 import terrainData from '../data/terrain.json';
+import obstaclesData from '../data/obstacles.json';
 
 type TerrainKey = keyof TerrainCounts;
 
@@ -30,6 +31,12 @@ interface TerrainData {
 }
 const terrain = terrainData as TerrainData;
 
+interface ObstaclesData {
+  types: string[];
+  scenarios: Record<string, Record<string, number>>;
+}
+const obstacles = obstaclesData as unknown as ObstaclesData;
+
 const STATUS_COLORS: Record<ReadyStatus, string> = {
   ready: 'var(--ready)', partial: 'var(--partial)', missing: 'var(--missing)', 'no-data': 'var(--text-dim)',
 };
@@ -41,6 +48,7 @@ export default function Dashboard() {
   const { inventory, pin, unpin, isPinned } = useInventory();
   const { paintStatus, getStatus } = usePaintStatus();
   const [monstersOpen, setMonstersOpen] = useState(false);
+  const [neededOpen, setNeededOpen] = useState(false);
   const [lookup, setLookup] = useState('');
   const navigate = useNavigate();
 
@@ -85,17 +93,20 @@ export default function Dashboard() {
   }
 
   interface NeededItem {
-    kind: 'terrain' | 'monster';
+    kind: 'terrain' | 'monster' | 'obstacle';
     label: string;
     shortfall?: number;
+    standees?: number;
     scenarios: string[];
   }
 
   // Aggregate gaps across pinned scenarios, ranked by how many pins each unblocks.
-  // Terrain shortfall is the max across pins (tiles are reused between scenarios).
+  // Terrain/obstacle shortfall is the max across pins (pieces are reused between
+  // scenarios). Monster standees is the max a single pin calls for (2-player).
   const mostNeeded = useMemo<NeededItem[]>(() => {
     const terrainAgg = new Map<TerrainKey, { shortfall: number; scenarios: string[] }>();
-    const monsterAgg = new Map<string, string[]>();
+    const obstacleAgg = new Map<string, { shortfall: number; scenarios: string[] }>();
+    const monsterAgg = new Map<string, { standees: number; scenarios: string[] }>();
     for (const id of inventory.pinned) {
       const t = terrain.scenarios[terrainIdFor(id)];
       if (t) {
@@ -109,10 +120,26 @@ export default function Dashboard() {
           }
         }
       }
+      const obs = obstacles.scenarios[terrainIdFor(id)];
+      if (obs) {
+        for (const [name, need] of Object.entries(obs)) {
+          const short = need - (inventory.obstacles[name] ?? 0);
+          if (short > 0) {
+            const cur = obstacleAgg.get(name) ?? { shortfall: 0, scenarios: [] };
+            cur.shortfall = Math.max(cur.shortfall, short);
+            cur.scenarios.push(id);
+            obstacleAgg.set(name, cur);
+          }
+        }
+      }
+      const counts = getScenarioMonsterCounts(id);
       const missing = pinnedMissingMonsters(id);
       if (Array.isArray(missing)) {
         for (const name of missing) {
-          monsterAgg.set(name, [...(monsterAgg.get(name) ?? []), id]);
+          const cur = monsterAgg.get(name) ?? { standees: 0, scenarios: [] };
+          cur.standees = Math.max(cur.standees, counts?.[name] ?? 0);
+          cur.scenarios.push(id);
+          monsterAgg.set(name, cur);
         }
       }
     }
@@ -123,15 +150,18 @@ export default function Dashboard() {
         shortfall: v.shortfall,
         scenarios: v.scenarios,
       })),
-      ...[...monsterAgg].map(([name, ids]) => ({
-        kind: 'monster' as const, label: name, scenarios: ids,
+      ...[...obstacleAgg].map(([name, v]) => ({
+        kind: 'obstacle' as const, label: name, shortfall: v.shortfall, scenarios: v.scenarios,
+      })),
+      ...[...monsterAgg].map(([name, v]) => ({
+        kind: 'monster' as const, label: name, standees: v.standees, scenarios: v.scenarios,
       })),
     ];
     // Most pins unblocked first; among ties, smallest print job first
     items.sort((a, b) => b.scenarios.length - a.scenarios.length || (a.shortfall ?? 1) - (b.shortfall ?? 1));
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inventory.pinned, inventory.terrain, inventory.monsters]);
+  }, [inventory.pinned, inventory.terrain, inventory.monsters, inventory.obstacles]);
 
   const pinnedSubhead: React.CSSProperties = {
     fontSize: '10px', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
@@ -266,19 +296,21 @@ export default function Dashboard() {
             <p style={{ fontSize: '13px', color: 'var(--ready)' }}>✓ Everything for your pinned scenarios is covered</p>
           ) : (
             <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
-              {mostNeeded.slice(0, 8).map((item, i) => (
-                <div key={`${item.kind}-${item.label}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 14px', background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)', borderBottom: i < Math.min(mostNeeded.length, 8) - 1 ? '1px solid var(--border)' : 'none' }}>
+              {(neededOpen ? mostNeeded : mostNeeded.slice(0, 8)).map((item, i, visible) => (
+                <div key={`${item.kind}-${item.label}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 14px', background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-2)', borderBottom: i < visible.length - 1 ? '1px solid var(--border)' : 'none' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: '3px', background: 'var(--accent-dim)', color: 'var(--accent)', flexShrink: 0 }}>
                       {item.kind}
                     </span>
                     <span style={{ fontSize: '13px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.label}
-                      {item.kind === 'terrain' && (
+                      {(item.kind === 'terrain' || item.kind === 'obstacle') && (
                         <span style={{ color: 'var(--missing)' }}> — print {item.shortfall} more</span>
                       )}
                       {item.kind === 'monster' && (
-                        <span style={{ color: 'var(--missing)' }}> — need set</span>
+                        <span style={{ color: 'var(--missing)' }}>
+                          {' '}— need set{item.standees ? ` (${item.standees} standee${item.standees !== 1 ? 's' : ''})` : ''}
+                        </span>
                       )}
                     </span>
                   </span>
@@ -289,9 +321,14 @@ export default function Dashboard() {
                 </div>
               ))}
               {mostNeeded.length > 8 && (
-                <div style={{ padding: '8px 14px', fontSize: '11px', color: 'var(--text-dim)', borderTop: '1px solid var(--border)' }}>
-                  +{mostNeeded.length - 8} more item{mostNeeded.length - 8 !== 1 ? 's' : ''}
-                </div>
+                <button
+                  onClick={() => setNeededOpen(o => !o)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px 14px', background: 'none', border: 'none', borderTop: '1px solid var(--border)', cursor: 'pointer', fontSize: '11px', color: 'var(--accent)', minHeight: '36px' }}
+                >
+                  {neededOpen
+                    ? <>Show less <ChevronUp size={14} /></>
+                    : <>+{mostNeeded.length - 8} more item{mostNeeded.length - 8 !== 1 ? 's' : ''} <ChevronDown size={14} /></>}
+                </button>
               )}
             </div>
           )}
